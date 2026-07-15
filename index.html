@@ -3,292 +3,735 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Storage Planner</title>
+    <title>Production Storage Planner</title>
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#000000">
-    <link rel="apple-touch-icon" href="icon-512.png">
+    <meta name="theme-color" content="#0d1117">
     <style>
         :root {
-            --bg: #000000;
-            --card: #1c1c1e;
-            --border: #38383a;
-            --text: #ffffff;
-            --text-muted: #8e8e93;
-            --accent: #0a84ff;
-            --danger: #ff453a;
-            --warning: #ffd60a;
+            --bg: #0a0c10;
+            --card: #12161f;
+            --border: #222938;
+            --text: #f0f3f8;
+            --text-muted: #7d8597;
+            --accent: #2f81f7;
+            --accent-hover: #1f6feb;
+            --danger: #f85149;
+            --warning: #d29922;
+            --success: #238636;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-        body { background-color: var(--bg); color: var(--text); padding: 15px; padding-bottom: 40px; line-height: 1.5; }
-        .container { max-width: 600px; margin: 0 auto; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg); color: var(--text); padding: 15px; padding-bottom: 60px; line-height: 1.5; }
+        .container { max-width: 800px; margin: 0 auto; }
         
-        h1 { font-size: 1.8rem; margin-bottom: 20px; font-weight: 700; text-align: center; }
-        .section-title { font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase; margin: 20px 0 8px 15px; font-weight: 600; letter-spacing: 0.5px; }
+        /* Tab Navigation */
+        .tab-nav { display: flex; background-color: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 20px; }
+        .tab-btn { flex: 1; padding: 14px 10px; background: none; border: none; color: var(--text-muted); font-size: 0.9rem; font-weight: 600; cursor: pointer; text-align: center; transition: all 0.2s; border-bottom: 3px solid transparent; }
+        .tab-btn.active { color: var(--text); background-color: rgba(47, 129, 247, 0.1); border-bottom-color: var(--accent); }
         
-        .card { background-color: var(--card); border-radius: 12px; overflow: hidden; margin-bottom: 20px; }
-        .row { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; border-bottom: 1px solid var(--border); }
-        .row:last-child { border-bottom: none; }
-        .row-col { flex-direction: column; align-items: flex-start; gap: 8px; }
-        
-        label { font-size: 1rem; color: var(--text); }
-        select, input { background-color: transparent; color: var(--accent); border: none; font-size: 1rem; text-align: right; outline: none; -webkit-appearance: none; }
-        select { cursor: pointer; font-weight: 500; }
-        input[type="number"] { width: 80px; background-color: rgba(255,255,255,0.05); padding: 5px; border-radius: 6px; }
-        
-        .highlight { color: var(--accent); font-weight: bold; font-size: 1.1rem; }
-        .warning-box { background-color: rgba(255, 214, 10, 0.1); color: var(--warning); padding: 12px 15px; font-size: 0.9rem; text-align: center; border-bottom: 1px solid var(--border); display: none; }
-        
-        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 15px; }
-        .drive-box { background-color: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; text-align: center; border: 1px solid var(--border); }
-        .drive-box span { display: block; font-size: 1.2rem; font-weight: bold; color: var(--text); margin-top: 5px; }
-        .drive-title { font-size: 0.8rem; color: var(--text-muted); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
 
-        .tabs { display: flex; border-bottom: 1px solid var(--border); background-color: var(--card); }
-        .tab { flex: 1; text-align: center; padding: 12px; color: var(--text-muted); font-size: 0.9rem; cursor: pointer; }
-        .tab.active { color: var(--accent); border-bottom: 2px solid var(--accent); font-weight: 600; }
+        /* Typography & Cards */
+        h2 { font-size: 1.25rem; margin-bottom: 15px; color: var(--text); display: flex; align-items: center; justify-content: space-between; }
+        .section-label { font-size: 0.75rem; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+        .card { background-color: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-bottom: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        
+        /* Form Controls */
+        .form-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid rgba(34, 41, 56, 0.6); }
+        .form-row:last-child { border-bottom: none; }
+        .form-row label { font-size: 0.95rem; font-weight: 500; color: var(--text); }
+        
+        select, input { background-color: rgba(0,0,0,0.3); color: var(--accent); border: 1px solid var(--border); padding: 8px 12px; border-radius: 8px; font-size: 0.95rem; font-weight: 600; outline: none; text-align: right; transition: border 0.2s; }
+        select:focus, input:focus { border-color: var(--accent); }
+        select { cursor: pointer; }
+        input[type="number"], input[type="text"] { width: 100px; }
+        
+        /* Highlights & Alerts */
+        .highlight { color: var(--accent); font-weight: 700; font-size: 1.15rem; font-family: monospace; }
+        .warning-box { background-color: rgba(210, 153, 34, 0.1); border: 1px solid var(--warning); color: var(--warning); padding: 12px; border-radius: 8px; font-size: 0.85rem; margin-top: 10px; display: none; text-align: center; }
+        
+        /* Buttons */
+        .btn { width: 100%; padding: 14px; border-radius: 8px; border: none; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.2s; text-align: center; display: inline-block; }
+        .btn-primary { background-color: var(--accent); color: #fff; }
+        .btn-primary:hover { background-color: var(--accent-hover); }
+        .btn-danger { background-color: var(--danger); color: #fff; padding: 6px 12px; font-size: 0.8rem; width: auto; }
+        .btn-edit { background-color: var(--border); color: var(--text); padding: 6px 12px; font-size: 0.8rem; width: auto; margin-right: 5px; }
+
+        /* Segmented Controller */
+        .seg-control { display: flex; background: rgba(0,0,0,0.4); border: 1px solid var(--border); border-radius: 8px; padding: 4px; margin-bottom: 15px; }
+        .seg-btn { flex: 1; padding: 8px; text-align: center; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); cursor: pointer; border-radius: 6px; transition: all 0.2s; }
+        .seg-btn.active { background-color: var(--card); color: var(--text); box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+
+        /* Tables & Lists */
+        .item-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+        .list-item { background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 8px; padding: 14px; display: flex; justify-content: space-between; align-items: center; }
+        .list-item-info h4 { font-size: 1rem; color: var(--text); margin-bottom: 4px; }
+        .list-item-info p { font-size: 0.8rem; color: var(--text-muted); }
+        .list-item-actions { display: flex; align-items: center; }
+        
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        @media (max-width: 600px) { .grid-3 { grid-template-columns: 1fr; } }
+        .hw-col { background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center; }
+        .hw-col h4 { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 10px; }
+        
+        /* Custom Modal */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(4px); }
+        .modal { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; max-width: 350px; width: 90%; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        .modal h3 { margin-bottom: 10px; font-size: 1.1rem; }
+        .modal p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px; }
+        .modal-btns { display: flex; gap: 10px; }
+        .modal-btns .btn { padding: 10px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Storage Planner</h1>
+    <!-- Top Navigation Tabs -->
+    <div class="tab-nav">
+        <button class="tab-btn active" onclick="switchTab(1)">1. Device & Signal</button>
+        <button class="tab-btn" onclick="switchTab(2)">2. Production List (<span id="badge-count">0</span>)</button>
+        <button class="tab-btn" onclick="switchTab(3)">3. Offload Estimator</button>
+    </div>
 
-    <div class="section-title">1. Hardware & Signal</div>
-    <div class="card">
-        <div class="row">
-            <label>HyperDeck Model</label>
-            <select id="model"><option value="1">HD Studio</option><option value="2">4K Pro</option><option value="3">8K Extreme</option></select>
+    <!-- ================= TAB 1: DEVICE & SIGNAL ================= -->
+    <div id="tab-1" class="tab-content active">
+        <div class="section-label">Hardware Selection</div>
+        <div class="card">
+            <div class="form-row">
+                <label>Recording Hardware</label>
+                <select id="t1-device" style="width: 220px;"></select>
+            </div>
+            
+            <!-- Standard Resolution Dropdown -->
+            <div class="form-row" id="row-res-std">
+                <label>Resolution</label>
+                <select id="t1-res"></select>
+            </div>
+            <!-- Custom Resolution Inputs -->
+            <div class="form-row" id="row-res-custom" style="display: none;">
+                <label>Custom Canvas (W x H)</label>
+                <div style="display: flex; gap: 5px; align-items: center;">
+                    <input type="number" id="t1-res-w" value="9600" placeholder="Width" style="width: 75px;">
+                    <span>×</span>
+                    <input type="number" id="t1-res-h" value="1600" placeholder="Height" style="width: 75px;">
+                </div>
+            </div>
+
+            <!-- Standard FPS Dropdown -->
+            <div class="form-row" id="row-fps-std">
+                <label>Frame Rate (fps)</label>
+                <select id="t1-fps"></select>
+            </div>
+            <!-- Custom FPS Input -->
+            <div class="form-row" id="row-fps-custom" style="display: none;">
+                <label>Custom Frame Rate</label>
+                <input type="number" id="t1-fps-custom" value="60" min="1" max="240" style="width: 80px;">
+            </div>
+
+            <div class="form-row">
+                <label>Codec Family</label>
+                <select id="t1-family" style="width: 180px;"></select>
+            </div>
+            <div class="form-row">
+                <label>Codec Flavor</label>
+                <select id="t1-flavor" style="width: 180px;"></select>
+            </div>
+
+            <div id="t1-warning" class="warning-box">
+                ⚠ Sustained Write Alert: Data rate exceeds 300 MB/s. Ensure certified NVMe arrays or RAID configurations are utilized.
+            </div>
+
+            <div class="form-row" style="background: rgba(47, 129, 247, 0.08); padding: 12px; border-radius: 8px; margin-top: 10px;">
+                <label style="color: var(--accent); font-weight: 700;">Target Data Rate</label>
+                <div style="text-align: right;">
+                    <div id="t1-rate-mbps" class="highlight">-- MB/s</div>
+                    <div id="t1-rate-bit" style="font-size: 0.75rem; color: var(--text-muted);">-- Mbps</div>
+                </div>
+            </div>
         </div>
-        <div class="row">
-            <label>Resolution</label>
-            <select id="resolution"></select>
+
+        <div class="section-label">Capacity & Duration Calculator</div>
+        <div class="card">
+            <div class="seg-control">
+                <div class="seg-btn active" id="seg-space" onclick="setCalcMode('space')">Space to Time</div>
+                <div class="seg-btn" id="seg-time" onclick="setCalcMode('time')">Time to Space</div>
+            </div>
+
+            <div id="calc-space-mode" class="form-row">
+                <label>Available Drive Space</label>
+                <div style="display: flex; gap: 8px;">
+                    <input type="number" id="t1-input-space" value="1" step="any" style="width: 80px;">
+                    <select id="t1-unit-space" style="width: 65px;"><option value="1">MB</option><option value="1024">GB</option><option value="1048576" selected>TB</option></select>
+                </div>
+            </div>
+            <div id="calc-space-result" class="form-row">
+                <label>Max Recording Time</label>
+                <span id="t1-out-duration" class="highlight">00:00:00</span>
+            </div>
+
+            <div id="calc-time-mode" class="form-row" style="display: none;">
+                <label>Target Duration (H:M:S)</label>
+                <div style="display: flex; gap: 4px; align-items: center;">
+                    <input type="number" id="t1-in-hh" value="1" min="0" style="width: 45px;" placeholder="HH">:
+                    <input type="number" id="t1-in-mm" value="0" min="0" max="59" style="width: 45px;" placeholder="MM">:
+                    <input type="number" id="t1-in-ss" value="0" min="0" max="59" style="width: 45px;" placeholder="SS">
+                </div>
+            </div>
+            <div id="calc-time-result" class="form-row" style="display: none;">
+                <label>Required Storage</label>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <span id="t1-out-space" class="highlight">0.00</span>
+                    <select id="t1-unit-out" style="width: 65px;"><option value="1">MB</option><option value="1024" selected>GB</option><option value="1048576">TB</option></select>
+                </div>
+            </div>
         </div>
-        <div class="row">
-            <label>Frame Rate (fps)</label>
-            <select id="fps">
-                <option value="24">24</option><option value="25">25</option><option value="30" selected>30</option><option value="50">50</option><option value="60">60</option>
-            </select>
+
+        <div class="section-label">Production Planner</div>
+        <div class="card">
+            <div class="form-row">
+                <label>Simultaneous Recorders</label>
+                <input type="number" id="t1-recorders" value="2" min="1">
+            </div>
+            <div class="form-row">
+                <label>Hours Per Day</label>
+                <input type="number" id="t1-hours" value="8" min="0.5" step="any">
+            </div>
+            <div class="form-row">
+                <label>Production Days</label>
+                <input type="number" id="t1-days" value="3" min="1">
+            </div>
+            <div class="form-row" style="border-top: 1px solid var(--border); padding-top: 15px; margin-top: 5px;">
+                <label style="font-weight: 700;">Total Project Data</label>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <span id="t1-proj-data" class="highlight" style="font-size: 1.3rem;">0.00</span>
+                    <select id="t1-proj-unit" style="width: 65px;"><option value="1">MB</option><option value="1024">GB</option><option value="1048576" selected>TB</option></select>
+                </div>
+            </div>
         </div>
-        <div class="row">
-            <label>Codec Family</label>
-            <select id="family"></select>
+
+        <div class="form-row" style="margin-bottom: 15px;">
+            <input type="text" id="t1-setup-name" placeholder="Setup Name (e.g. Cam A - Main)" style="width: 100%; text-align: left; background: var(--card); padding: 12px; font-size: 1rem;">
         </div>
-        <div class="row">
-            <label>Codec Flavor</label>
-            <select id="flavor"></select>
+        <button class="btn btn-primary" onclick="addCurrentToProductionList()">+ Add Setup to Production List</button>
+    </div>
+
+    <!-- ================= TAB 2: PRODUCTION LIST ================= -->
+    <div id="tab-2" class="tab-content">
+        <div class="section-label">Saved Production Setups</div>
+        <div id="t2-empty-state" style="text-align: center; padding: 40px 20px; color: var(--text-muted); background: var(--card); border-radius: 12px; border: 1px dashed var(--border); margin-bottom: 20px;">
+            No production setups saved yet. Add camera configurations from Tab 1.
         </div>
-        <div id="bandwidth-warning" class="warning-box">⚠ Warning: Data rate exceeds 300 MB/s. Ensure certified high-speed NVMe media is used.</div>
-        <div class="row" style="background-color: rgba(10, 132, 255, 0.1);">
-            <label>Target Data Rate</label>
-            <span id="data-rate-display" class="highlight">-- MB/s</span>
+        
+        <div id="t2-list-container" class="item-list"></div>
+
+        <div class="card" style="background: rgba(47, 129, 247, 0.05); border-color: var(--accent);">
+            <div class="form-row" style="border: none; padding: 5px 0;">
+                <label style="font-weight: 700; color: var(--accent); font-size: 1.1rem;">Combined Total Production Data</label>
+                <span id="t2-combined-data" class="highlight" style="font-size: 1.4rem;">0.00 TB</span>
+            </div>
+        </div>
+
+        <div class="section-label" style="margin-top: 25px;">Hardware Storage Requirements (Base-10 Metric)</div>
+        <div class="grid-3">
+            <!-- Hardware Device Col 1 -->
+            <div class="hw-col">
+                <h4>Primary Backup Array</h4>
+                <select id="t2-hw-1" style="width: 100%; text-align: center; margin-bottom: 10px;">
+                    <option value="500">500 GB Drive</option><option value="1000">1 TB Drive</option><option value="2000" selected>2 TB Drive</option><option value="4000">4 TB Drive</option><option value="8000">8 TB Drive</option><option value="custom">Custom Size</option>
+                </select>
+                <input type="number" id="t2-hw-1-custom" value="16000" placeholder="GB" style="width: 100%; text-align: center; display: none; margin-bottom: 10px;">
+                <div style="font-size: 0.75rem; color: var(--text-muted);">Requires:</div>
+                <span id="t2-hw-1-out" class="highlight" style="font-size: 1.5rem;">0</span> <span style="font-size: 0.8rem;">Drives</span>
+            </div>
+            <!-- Hardware Device Col 2 -->
+            <div class="hw-col">
+                <h4>Secondary On-Set Shuttle</h4>
+                <select id="t2-hw-2" style="width: 100%; text-align: center; margin-bottom: 10px;">
+                    <option value="500">500 GB Drive</option><option value="1000">1 TB Drive</option><option value="2000">2 TB Drive</option><option value="4000" selected>4 TB Drive</option><option value="8000">8 TB Drive</option><option value="custom">Custom Size</option>
+                </select>
+                <input type="number" id="t2-hw-2-custom" value="16000" placeholder="GB" style="width: 100%; text-align: center; display: none; margin-bottom: 10px;">
+                <div style="font-size: 0.75rem; color: var(--text-muted);">Requires:</div>
+                <span id="t2-hw-2-out" class="highlight" style="font-size: 1.5rem;">0</span> <span style="font-size: 0.8rem;">Drives</span>
+            </div>
+            <!-- Hardware Device Col 3 -->
+            <div class="hw-col">
+                <h4>Master Studio Archive</h4>
+                <select id="t2-hw-3" style="width: 100%; text-align: center; margin-bottom: 10px;">
+                    <option value="500">500 GB Drive</option><option value="1000">1 TB Drive</option><option value="2000">2 TB Drive</option><option value="4000">4 TB Drive</option><option value="8000" selected>8 TB Drive</option><option value="custom">Custom Size</option>
+                </select>
+                <input type="number" id="t2-hw-3-custom" value="24000" placeholder="GB" style="width: 100%; text-align: center; display: none; margin-bottom: 10px;">
+                <div style="font-size: 0.75rem; color: var(--text-muted);">Requires:</div>
+                <span id="t2-hw-3-out" class="highlight" style="font-size: 1.5rem;">0</span> <span style="font-size: 0.8rem;">Drives</span>
+            </div>
         </div>
     </div>
 
-    <div class="section-title">2. Capacity Calculator</div>
-    <div class="card">
-        <div class="tabs">
-            <div class="tab active" id="tab-space" onclick="setMode('space')">Space to Time</div>
-            <div class="tab" id="tab-time" onclick="setMode('time')">Time to Space</div>
-        </div>
-        <div id="mode-space" class="row">
-            <label>Available Space</label>
-            <div style="display:flex; gap:10px; align-items:center;">
-                <input type="number" id="input-space" value="1" min="0" step="any">
-                <select id="unit-space"><option value="1">MB</option><option value="1024">GB</option><option value="1048576" selected>TB</option></select>
+    <!-- ================= TAB 3: DATA TRANSFER ESTIMATOR ================= -->
+    <div id="tab-3" class="tab-content">
+        <div class="section-label">Offload Parameter Selection</div>
+        <div class="card">
+            <div class="form-row">
+                <label>Source Data Package</label>
+                <select id="t3-source" style="width: 220px;"></select>
+            </div>
+            <div class="form-row">
+                <label>Interface Protocol</label>
+                <select id="t3-protocol" style="width: 220px;">
+                    <optgroup label="Thunderbolt & USB 4 (75% Real Efficiency)">
+                        <option value="40000_0.75">Thunderbolt 4 / 3 (40 Gbps)</option>
+                        <option value="40000_0.75">USB 4.0 (40 Gbps)</option>
+                        <option value="20000_0.75">Thunderbolt 2 (20 Gbps)</option>
+                        <option value="10000_0.75">Thunderbolt 1 (10 Gbps)</option>
+                    </optgroup>
+                    <optgroup label="USB 3.x / 2.0 (80% Real Efficiency)">
+                        <option value="10000_0.80">USB 3.2 Gen 2 (10 Gbps)</option>
+                        <option value="5000_0.80" selected>USB 3.0 / 3.1 Gen 1 (5 Gbps)</option>
+                        <option value="480_0.80">USB 2.0 High Speed (480 Mbps)</option>
+                    </optgroup>
+                    <optgroup label="Ethernet Networks (90% Real Efficiency)">
+                        <option value="10000_0.90">10 GbE Network (10 Gbps)</option>
+                        <option value="5000_0.90">5 GbE Network (5 Gbps)</option>
+                        <option value="2500_0.90">2.5 GbE Network (2.5 Gbps)</option>
+                        <option value="1000_0.90">Gigabit Ethernet (1 Gbps)</option>
+                    </optgroup>
+                    <optgroup label="Wireless (60% Real Avg Efficiency)">
+                        <option value="5800_0.60">WiFi 7 (5.8 Gbps Peak Avg)</option>
+                        <option value="1200_0.60">WiFi 6 (1.2 Gbps Peak Avg)</option>
+                    </optgroup>
+                </select>
+            </div>
+            <div class="form-row" style="background: rgba(47, 129, 247, 0.08); padding: 15px; border-radius: 8px; margin-top: 15px;">
+                <label style="color: var(--accent); font-weight: 700;">Estimated Offload Time</label>
+                <span id="t3-out-time" class="highlight" style="font-size: 1.4rem;">00:00:00</span>
             </div>
         </div>
-        <div id="mode-space-result" class="row">
-            <label>Max Duration</label>
-            <span id="output-duration" class="highlight" style="font-family: monospace;">00:00:00</span>
-        </div>
-
-        <div id="mode-time" class="row" style="display:none;">
-            <label>Duration (H:M:S)</label>
-            <div style="display:flex; gap:5px; align-items:center;">
-                <input type="number" id="input-hh" value="1" min="0" style="width:50px;">:
-                <input type="number" id="input-mm" value="0" min="0" max="59" style="width:50px;">:
-                <input type="number" id="input-ss" value="0" min="0" max="59" style="width:50px;">
-            </div>
-        </div>
-        <div id="mode-time-result" class="row" style="display:none;">
-            <label>Required Space</label>
-            <div style="display:flex; gap:10px; align-items:center;">
-                <span id="output-space" class="highlight">0.00</span>
-                <select id="unit-output"><option value="1">MB</option><option value="1024" selected>GB</option><option value="1048576">TB</option></select>
-            </div>
+        <div style="font-size: 0.8rem; color: var(--text-muted); padding: 0 10px; text-align: center;">
+            * Calculations automatically incorporate hardware bus efficiency limits and a mandatory <strong>10% TCP/IP network packet overhead penalty</strong>.
         </div>
     </div>
+</div>
 
-    <div class="section-title">3. Production Planner</div>
-    <div class="card">
-        <div class="row">
-            <label>Simultaneous Recorders</label>
-            <input type="number" id="proj-recorders" value="1" min="1">
-        </div>
-        <div class="row">
-            <label>Hours Per Day</label>
-            <input type="number" id="proj-hours" value="8" min="0.1" step="any">
-        </div>
-        <div class="row">
-            <label>Total Days</label>
-            <input type="number" id="proj-days" value="1" min="1">
-        </div>
-        <div class="row" style="background-color: rgba(10, 132, 255, 0.1);">
-            <label>Total Project Data</label>
-            <div style="display:flex; gap:10px; align-items:center;">
-                <span id="proj-total-data" class="highlight">0.00</span>
-                <select id="unit-proj"><option value="1">MB</option><option value="1024">GB</option><option value="1048576" selected>TB</option></select>
-            </div>
-        </div>
-    </div>
-
-    <div class="section-title">4. Data Offload Estimator</div>
-    <div class="card">
-        <div class="row">
-            <label>Transfer Speed</label>
-            <select id="transfer-speed">
-                <option value="100">100 Mbps (Fast Ethernet)</option>
-                <option value="300">300 Mbps (Standard WiFi)</option>
-                <option value="500">500 Mbps (Fast WiFi)</option>
-                <option value="1000" selected>1 Gbps (Standard Network)</option>
-                <option value="2500">2.5 Gbps (Upgraded Network)</option>
-                <option value="5000">5 Gbps (USB 3.0)</option>
-                <option value="10000">10 Gbps (10G/Thunderbolt)</option>
-            </select>
-        </div>
-        <div class="row">
-            <label>Estimated Time</label>
-            <span id="transfer-time" class="highlight" style="font-family: monospace;">00:00:00</span>
-        </div>
-    </div>
-
-    <div class="section-title">5. Hardware Requirements</div>
-    <div class="card">
-        <div class="grid-4">
-            <div class="drive-box"><div class="drive-title">500 GB</div><span id="d500">0</span></div>
-            <div class="drive-box"><div class="drive-title">1 TB</div><span id="d1000">0</span></div>
-            <div class="drive-box"><div class="drive-title">2 TB</div><span id="d2000">0</span></div>
-            <div class="drive-box"><div class="drive-title">4 TB</div><span id="d4000">0</span></div>
-        </div>
-        <div class="row">
-            <label>Custom Drive Size</label>
-            <div style="display:flex; gap:10px; align-items:center;">
-                <input type="number" id="custom-size" value="8" min="1" step="any">
-                <select id="custom-unit"><option value="1">MB</option><option value="1000">GB</option><option value="1000000" selected>TB</option></select>
-            </div>
-        </div>
-        <div class="row">
-            <label>Requires</label>
-            <span id="dcustom" class="highlight">0 Drives</span>
+<!-- Custom Confirmation Modal -->
+<div id="delete-modal" class="modal-overlay">
+    <div class="modal">
+        <h3>Confirm Deletion</h3>
+        <p id="modal-text">Are you sure you want to remove this setup from your production list?</p>
+        <div class="modal-btns">
+            <button class="btn" style="background: var(--border); color: var(--text);" onclick="closeModal()">Cancel</button>
+            <button class="btn btn-danger" id="modal-confirm-btn">Delete Setup</button>
         </div>
     </div>
 </div>
 
 <script>
-    const resolutions = [
-        { id: "1080", name: "1080p HD", multiplier: 1, level: 1 },
-        { id: "4k", name: "4K UHD", multiplier: 4, level: 2 },
-        { id: "8k", name: "8K UHD", multiplier: 16, level: 3 }
-    ];
-
-    const codecs = {
-        prores: { name: "Apple ProRes", flavors: [ { name: "Proxy", rate: 5.6 }, { name: "LT", rate: 12.75 }, { name: "422", rate: 18.4 }, { name: "HQ", rate: 27.5 }, { name: "4444", rate: 41.25 } ] },
-        dnx: { name: "Avid DNxHD/HR", flavors: [ { name: "LB", rate: 4.5 }, { name: "SQ", rate: 18.1 }, { name: "HQ/HQX", rate: 27.5 }, { name: "444", rate: 41.25 } ] },
-        h264: { name: "H.264", flavors: [ { name: "Low", rate: 1.25 }, { name: "Medium", rate: 2.5 }, { name: "High/SDI", rate: 3.75 } ] },
-        h265: { name: "H.265 (HEVC)", flavors: [ { name: "Low", rate: 1.5 }, { name: "Medium", rate: 3.0 }, { name: "High/SDI", rate: 5.0 } ] }
+    // ================= SYSTEM DATABASES =================
+    const DEVICES = {
+        "bm_hd": { name: "Blackmagic HyperDeck Studio HD", res: ["1080"], fps: [24, 25, 30, 50, 60], codecs: ["prores", "dnx", "h264"] },
+        "bm_4k": { name: "Blackmagic HyperDeck Studio 4K Pro", res: ["1080", "4k"], fps: [24, 25, 30, 50, 60], codecs: ["prores", "dnx", "h264", "h265"] },
+        "bm_8k": { name: "Blackmagic HyperDeck Extreme 8K", res: ["1080", "4k", "8k"], fps: [24, 25, 30, 50, 60], codecs: ["prores", "dnx", "h265"] },
+        "bm_assist": { name: "Blackmagic Video Assist 12G HDR", res: ["1080", "4k"], fps: [24, 25, 30, 50, 60], codecs: ["prores", "dnx", "braw"] },
+        "aja_ultra": { name: "AJA Ki Pro Ultra 12G", res: ["1080", "4k"], fps: [24, 25, 30, 50, 60], codecs: ["prores", "dnx"] },
+        "aja_go": { name: "AJA Ki Pro GO (Multi-Channel)", res: ["1080"], fps: [24, 25, 30, 50, 60], codecs: ["h264"] },
+        "atom_ninja": { name: "ATOMOS Ninja V / V+", res: ["1080", "4k", "8k"], fps: [24, 25, 30, 50, 60, 120], codecs: ["prores", "dnx", "h265"] },
+        "atom_shogun": { name: "ATOMOS Shogun Connect", res: ["1080", "4k"], fps: [24, 25, 30, 50, 60, 120], codecs: ["prores", "dnx", "h265"] },
+        "atom_sumo": { name: "ATOMOS Sumo 19SE", res: ["1080", "4k"], fps: [24, 25, 30, 50, 60], codecs: ["prores", "dnx"] },
+        "custom": { name: "⚡ Custom Device / Media Server", res: ["custom"], fps: ["custom"], codecs: ["prores", "dnx", "h264", "h265", "braw", "hap", "notch"] }
     };
 
-    let currentRateMBps = 0;
-    let projTotalMB = 0;
+    const RESOLUTIONS = {
+        "1080": { name: "1080p HD (1920×1080)", pixels: 2073600 },
+        "4k": { name: "4K UHD (3840×2160)", pixels: 8294400 },
+        "8k": { name: "8K UHD (7680×4320)", pixels: 33177600 }
+    };
 
-    function init() {
-        const fam = document.getElementById('family');
-        for (const key in codecs) { fam.add(new Option(codecs[key].name, key)); }
+    // Base MB/s normalized to 1080p @ 30fps (2,073,600 pixels)
+    const CODECS = {
+        prores: { name: "Apple ProRes", flavors: [ { name: "ProRes Proxy", rate: 5.6 }, { name: "ProRes LT", rate: 12.75 }, { name: "ProRes 422", rate: 18.4 }, { name: "ProRes HQ", rate: 27.5 }, { name: "ProRes 4444", rate: 41.25 } ] },
+        dnx: { name: "Avid DNxHD / DNxHR", flavors: [ { name: "DNx LB (36)", rate: 4.5 }, { name: "DNx SQ (145)", rate: 18.1 }, { name: "DNx HQ / HQX", rate: 27.5 }, { name: "DNx 444", rate: 41.25 } ] },
+        h264: { name: "H.264 / AVC", flavors: [ { name: "Low Profile (~10 Mbps)", rate: 1.25 }, { name: "Medium Profile (~20 Mbps)", rate: 2.5 }, { name: "High / SDI (~30 Mbps)", rate: 3.75 } ] },
+        h265: { name: "H.265 / HEVC", flavors: [ { name: "Low Profile (~12 Mbps)", rate: 1.5 }, { name: "Medium Profile (~24 Mbps)", rate: 3.0 }, { name: "High / SDI (~40 Mbps)", rate: 5.0 } ] },
+        braw: { name: "Blackmagic RAW", flavors: [ { name: "BRAW 12:1", rate: 8.0 }, { name: "BRAW 8:1", rate: 12.0 }, { name: "BRAW 5:1", rate: 19.0 }, { name: "BRAW 3:1", rate: 31.75 } ] },
+        hap: { name: "Vidvox HAP Codec", flavors: [ { name: "HAP Standard (GPU Accelerated)", rate: 58.0 }, { name: "HAP Alpha", rate: 58.0 }, { name: "HAP Q (High Quality)", rate: 116.0 } ] },
+        notch: { name: "NotchLC (GPU Intermediate)", flavors: [ { name: "NotchLC - Good", rate: 69.0 }, { name: "NotchLC - Better", rate: 92.0 }, { name: "NotchLC - Best", rate: 138.0 } ] }
+    };
+
+    let activeTab1RateMBps = 0;
+    let activeTab1TotalGB = 0;
+    let productionList = [];
+    let deleteTargetId = null;
+
+    // ================= INITIALIZATION & EVENT BINDING =================
+    window.onload = () => {
+        // Load stored setups
+        const saved = localStorage.getItem('prod_storage_list');
+        if (saved) { try { productionList = JSON.parse(saved); } catch(e){} }
         
-        document.querySelectorAll('select, input').forEach(el => el.addEventListener('input', runCalc));
-        document.getElementById('model').addEventListener('change', updateConstraints);
-        document.getElementById('family').addEventListener('change', updateFlavors);
+        // Populate Hardware Dropdown
+        const devSel = document.getElementById('t1-device');
+        for (const key in DEVICES) { devSel.add(new Option(DEVICES[key].name, key)); }
+        devSel.value = "bm_4k"; // Default
+
+        // Bind Event Listeners
+        devSel.addEventListener('change', onDeviceChange);
+        document.getElementById('t1-res').addEventListener('change', runTab1Calculations);
+        document.getElementById('t1-res-w').addEventListener('input', runTab1Calculations);
+        document.getElementById('t1-res-h').addEventListener('input', runTab1Calculations);
+        document.getElementById('t1-fps').addEventListener('change', runTab1Calculations);
+        document.getElementById('t1-fps-custom').addEventListener('input', runTab1Calculations);
+        document.getElementById('t1-family').addEventListener('change', onFamilyChange);
+        document.getElementById('t1-flavor').addEventListener('change', runTab1Calculations);
         
-        updateConstraints();
-        updateFlavors();
+        document.querySelectorAll('#tab-1 input, #tab-1 select').forEach(el => {
+            if(!el.id.startsWith('t1-device') && !el.id.startsWith('t1-family') && !el.id.startsWith('t1-res') && !el.id.startsWith('t1-fps')) {
+                el.addEventListener('input', runTab1Calculations);
+            }
+        });
+
+        // Bind Tab 2 Hardware selectors
+        [1, 2, 3].forEach(num => {
+            const sel = document.getElementById(`t2-hw-${num}`);
+            const cust = document.getElementById(`t2-hw-${num}-custom`);
+            sel.addEventListener('change', () => {
+                cust.style.display = sel.value === 'custom' ? 'block' : 'none';
+                renderTab2();
+            });
+            cust.addEventListener('input', renderTab2);
+        });
+
+        // Bind Tab 3 selectors
+        document.getElementById('t3-source').addEventListener('change', runTab3Calculations);
+        document.getElementById('t3-protocol').addEventListener('change', runTab3Calculations);
+
+        onDeviceChange();
+        renderTab2();
+    };
+
+    function switchTab(num) {
+        document.querySelectorAll('.tab-btn').forEach((btn, idx) => {
+            btn.className = (idx + 1 === num) ? 'tab-btn active' : 'tab-btn';
+        });
+        document.querySelectorAll('.tab-content').forEach((content, idx) => {
+            content.className = (idx + 1 === num) ? 'tab-content active' : 'tab-content';
+        });
+        if (num === 2) renderTab2();
+        if (num === 3) populateTab3Sources();
     }
 
-    function updateConstraints() {
-        const maxLevel = parseInt(document.getElementById('model').value);
-        const res = document.getElementById('resolution');
-        const currentVal = res.value;
-        res.innerHTML = '';
-        resolutions.filter(r => r.level <= maxLevel).forEach(r => res.add(new Option(r.name, r.multiplier)));
-        if(Array.from(res.options).some(o => o.value === currentVal)) res.value = currentVal;
-        runCalc();
-    }
+    // ================= TAB 1: LOGIC & CALCULATIONS =================
+    function onDeviceChange() {
+        const devKey = document.getElementById('t1-device').value;
+        const dev = DEVICES[devKey];
 
-    function updateFlavors() {
-        const flv = document.getElementById('flavor');
-        flv.innerHTML = '';
-        codecs[document.getElementById('family').value].flavors.forEach(f => flv.add(new Option(f.name, f.rate)));
-        // Default to HQ equivalent
-        if(flv.options.length >= 4) flv.selectedIndex = 3; 
-        runCalc();
-    }
-
-    function setMode(mode) {
-        document.getElementById('mode-space').style.display = mode === 'space' ? 'flex' : 'none';
-        document.getElementById('mode-space-result').style.display = mode === 'space' ? 'flex' : 'none';
-        document.getElementById('mode-time').style.display = mode === 'time' ? 'flex' : 'none';
-        document.getElementById('mode-time-result').style.display = mode === 'time' ? 'flex' : 'none';
-        
-        document.getElementById('tab-space').className = mode === 'space' ? 'tab active' : 'tab';
-        document.getElementById('tab-time').className = mode === 'time' ? 'tab active' : 'tab';
-        runCalc();
-    }
-
-    function runCalc() {
-        // Data Rate
-        const base = parseFloat(document.getElementById('flavor').value) || 0;
-        const resMult = parseFloat(document.getElementById('resolution').value) || 1;
-        const fps = parseFloat(document.getElementById('fps').value) || 30;
-        currentRateMBps = base * resMult * (fps / 30.0);
-        
-        document.getElementById('data-rate-display').innerText = currentRateMBps.toFixed(2) + " MB/s";
-        document.getElementById('bandwidth-warning').style.display = currentRateMBps > 300 ? 'block' : 'none';
-
-        // Calculator
-        if (document.getElementById('mode-space').style.display !== 'none') {
-            const space = parseFloat(document.getElementById('input-space').value) || 0;
-            const mult = parseFloat(document.getElementById('unit-space').value);
-            document.getElementById('output-duration').innerText = formatTime((space * mult) / currentRateMBps);
+        // 1. Configure Resolutions
+        const resSel = document.getElementById('t1-res');
+        resSel.innerHTML = '';
+        if (dev.res[0] === 'custom') {
+            document.getElementById('row-res-std').style.display = 'none';
+            document.getElementById('row-res-custom').style.display = 'flex';
         } else {
-            const secs = (parseFloat(document.getElementById('input-hh').value||0)*3600) + (parseFloat(document.getElementById('input-mm').value||0)*60) + parseFloat(document.getElementById('input-ss').value||0);
-            const div = parseFloat(document.getElementById('unit-output').value);
-            document.getElementById('output-space').innerText = ((secs * currentRateMBps) / div).toFixed(2);
+            document.getElementById('row-res-std').style.display = 'flex';
+            document.getElementById('row-res-custom').style.display = 'none';
+            dev.res.forEach(rKey => resSel.add(new Option(RESOLUTIONS[rKey].name, rKey)));
+            if(dev.res.includes('4k')) resSel.value = '4k';
         }
 
-        // Project
-        const recs = parseFloat(document.getElementById('proj-recorders').value) || 1;
-        const hrs = parseFloat(document.getElementById('proj-hours').value) || 8;
-        const days = parseFloat(document.getElementById('proj-days').value) || 1;
-        projTotalMB = recs * hrs * 3600 * days * currentRateMBps;
-        
-        document.getElementById('proj-total-data').innerText = (projTotalMB / parseFloat(document.getElementById('unit-proj').value)).toFixed(2);
+        // 2. Configure Frame Rates
+        const fpsSel = document.getElementById('t1-fps');
+        fpsSel.innerHTML = '';
+        if (dev.fps[0] === 'custom') {
+            document.getElementById('row-fps-std').style.display = 'none';
+            document.getElementById('row-fps-custom').style.display = 'flex';
+        } else {
+            document.getElementById('row-fps-std').style.display = 'flex';
+            document.getElementById('row-fps-custom').style.display = 'none';
+            dev.fps.forEach(f => fpsSel.add(new Option(`${f} fps`, f)));
+            fpsSel.value = "30";
+        }
 
-        // Drives (Using Hardware Base-10 1000MB = 1GB)
-        document.getElementById('d500').innerText = Math.ceil(projTotalMB / 500000);
-        document.getElementById('d1000').innerText = Math.ceil(projTotalMB / 1000000);
-        document.getElementById('d2000').innerText = Math.ceil(projTotalMB / 2000000);
-        document.getElementById('d4000').innerText = Math.ceil(projTotalMB / 4000000);
+        // 3. Configure Codec Families
+        const famSel = document.getElementById('t1-family');
+        const currentFam = famSel.value;
+        famSel.innerHTML = '';
+        dev.codecs.forEach(cKey => famSel.add(new Option(CODECS[cKey].name, cKey)));
+        if (dev.codecs.includes(currentFam)) famSel.value = currentFam;
         
-        const cSize = parseFloat(document.getElementById('custom-size').value) || 1;
-        const cUnit = parseFloat(document.getElementById('custom-unit').value);
-        document.getElementById('dcustom').innerText = Math.ceil(projTotalMB / (cSize * cUnit)) + " Drives";
-
-        // Transfer Estimator (Bits, overhead included)
-        const speedMbps = parseFloat(document.getElementById('transfer-speed').value);
-        const totalBitsOverhead = projTotalMB * 8 * 1.10;
-        document.getElementById('transfer-time').innerText = formatExtendedTime(totalBitsOverhead / speedMbps);
+        onFamilyChange();
     }
 
+    function onFamilyChange() {
+        const famKey = document.getElementById('t1-family').value;
+        const flvSel = document.getElementById('t1-flavor');
+        flvSel.innerHTML = '';
+        CODECS[famKey].flavors.forEach((flv, idx) => flvSel.add(new Option(flv.name, idx)));
+        
+        // Default to high quality tiers (HQ / 422 equivalent)
+        if (flvSel.options.length >= 4) flvSel.selectedIndex = 3;
+        else if (flvSel.options.length >= 3) flvSel.selectedIndex = 2;
+        
+        runTab1Calculations();
+    }
+
+    function setCalcMode(mode) {
+        document.getElementById('seg-space').className = mode === 'space' ? 'seg-btn active' : 'seg-btn';
+        document.getElementById('seg-time').className = mode === 'time' ? 'seg-btn active' : 'seg-btn';
+        
+        document.getElementById('calc-space-mode').style.display = mode === 'space' ? 'flex' : 'none';
+        document.getElementById('calc-space-result').style.display = mode === 'space' ? 'flex' : 'none';
+        document.getElementById('calc-time-mode').style.display = mode === 'time' ? 'flex' : 'none';
+        document.getElementById('calc-time-result').style.display = mode === 'time' ? 'flex' : 'none';
+        runTab1Calculations();
+    }
+
+    function runTab1Calculations() {
+        const devKey = document.getElementById('t1-device').value;
+        const famKey = document.getElementById('t1-family').value;
+        const flvIdx = parseInt(document.getElementById('t1-flavor').value) || 0;
+        
+        const baseRate1080p30 = CODECS[famKey].flavors[flvIdx].rate;
+        
+        // Calculate Pixel Scaling Factor against 1080p (2,073,600 pixels)
+        let pixelCount = 2073600;
+        if (DEVICES[devKey].res[0] === 'custom') {
+            const w = parseFloat(document.getElementById('t1-res-w').value) || 1920;
+            const h = parseFloat(document.getElementById('t1-res-h').value) || 1080;
+            pixelCount = w * h;
+        } else {
+            const rKey = document.getElementById('t1-res').value || "1080";
+            pixelCount = RESOLUTIONS[rKey].pixels;
+        }
+        const spatialMultiplier = pixelCount / 2073600.0;
+
+        // Calculate FPS Multiplier against 30fps
+        let fps = 30;
+        if (DEVICES[devKey].fps[0] === 'custom') {
+            fps = parseFloat(document.getElementById('t1-fps-custom').value) || 30;
+        } else {
+            fps = parseFloat(document.getElementById('t1-fps').value) || 30;
+        }
+        const fpsMultiplier = fps / 30.0;
+
+        // Final Active Data Rate
+        activeTab1RateMBps = baseRate1080p30 * spatialMultiplier * fpsMultiplier;
+        
+        document.getElementById('t1-rate-mbps').innerText = activeTab1RateMBps.toFixed(2) + " MB/s";
+        document.getElementById('t1-rate-bit').innerText = (activeTab1RateMBps * 8).toFixed(2) + " Mbps";
+        document.getElementById('t1-warning').style.display = activeTab1RateMBps > 300 ? 'block' : 'none';
+
+        // Capacity vs Duration Math
+        if (document.getElementById('calc-space-mode').style.display !== 'none') {
+            const spaceInput = parseFloat(document.getElementById('t1-input-space').value) || 0;
+            const unitMult = parseFloat(document.getElementById('t1-unit-space').value);
+            const totalMB = spaceInput * unitMult;
+            const totalSecs = activeTab1RateMBps > 0 ? totalMB / activeTab1RateMBps : 0;
+            document.getElementById('t1-out-duration').innerText = formatTime(totalSecs);
+        } else {
+            const hh = parseFloat(document.getElementById('t1-in-hh').value) || 0;
+            const mm = parseFloat(document.getElementById('t1-in-mm').value) || 0;
+            const ss = parseFloat(document.getElementById('t1-in-ss').value) || 0;
+            const totalSecs = (hh * 3600) + (mm * 60) + ss;
+            const totalMB = totalSecs * activeTab1RateMBps;
+            const outDiv = parseFloat(document.getElementById('t1-unit-out').value);
+            document.getElementById('t1-out-space').innerText = (totalMB / outDiv).toFixed(2);
+        }
+
+        // Production Planner Math
+        const recs = parseFloat(document.getElementById('t1-recorders').value) || 1;
+        const hrs = parseFloat(document.getElementById('t1-hours').value) || 1;
+        const days = parseFloat(document.getElementById('t1-days').value) || 1;
+        
+        const totalProjectSecs = recs * hrs * 3600 * days;
+        const totalProjectMB = totalProjectSecs * activeTab1RateMBps;
+        activeTab1TotalGB = totalProjectMB / 1024.0; // Standardize to GB for storage
+        
+        const projUnitDiv = parseFloat(document.getElementById('t1-proj-unit').value);
+        document.getElementById('t1-proj-data').innerText = (totalProjectMB / projUnitDiv).toFixed(2);
+    }
+
+    function addCurrentToProductionList() {
+        if (activeTab1RateMBps <= 0) return;
+        
+        const devKey = document.getElementById('t1-device').value;
+        const famKey = document.getElementById('t1-family').value;
+        const flvIdx = parseInt(document.getElementById('t1-flavor').value) || 0;
+        
+        let resLabel = "";
+        if (DEVICES[devKey].res[0] === 'custom') {
+            resLabel = `${document.getElementById('t1-res-w').value}×${document.getElementById('t1-res-h').value}`;
+        } else {
+            resLabel = document.getElementById('t1-res').value.toUpperCase();
+        }
+
+        let fpsVal = DEVICES[devKey].fps[0] === 'custom' ? document.getElementById('t1-fps-custom').value : document.getElementById('t1-fps').value;
+        
+        const customName = document.getElementById('t1-setup-name').value.trim();
+        const setupName = customName !== "" ? customName : `Setup #${productionList.length + 1} (${DEVICES[devKey].name.split(' ')[1] || 'Deck'})`;
+
+        const newItem = {
+            id: Date.now(),
+            name: setupName,
+            device: DEVICES[devKey].name,
+            res: resLabel,
+            fps: fpsVal,
+            codec: `${CODECS[famKey].name} (${CODECS[famKey].flavors[flvIdx].name})`,
+            rateMBps: activeTab1RateMBps,
+            recorders: parseFloat(document.getElementById('t1-recorders').value) || 1,
+            hours: parseFloat(document.getElementById('t1-hours').value) || 1,
+            days: parseFloat(document.getElementById('t1-days').value) || 1,
+            totalGB: activeTab1TotalGB
+        };
+
+        productionList.push(newItem);
+        saveList();
+        document.getElementById('t1-setup-name').value = ""; // Reset name field
+        switchTab(2); // Jump to list
+    }
+
+    // ================= TAB 2: LIST & HARDWARE PLANNING =================
+    function saveList() {
+        localStorage.setItem('prod_storage_list', JSON.stringify(productionList));
+        document.getElementById('badge-count').innerText = productionList.length;
+    }
+
+    function renderTab2() {
+        document.getElementById('badge-count').innerText = productionList.length;
+        const container = document.getElementById('t2-list-container');
+        const emptyState = document.getElementById('t2-empty-state');
+        container.innerHTML = '';
+
+        if (productionList.length === 0) {
+            emptyState.style.display = 'block';
+            document.getElementById('t2-combined-data').innerText = "0.00 TB";
+            updateHardwareOutputs(0);
+            return;
+        }
+
+        emptyState.style.display = 'none';
+        let combinedGB = 0;
+
+        productionList.forEach(item => {
+            combinedGB += item.totalGB;
+            const formattedSize = item.totalGB >= 1024 ? `${(item.totalGB/1024).toFixed(2)} TB` : `${item.totalGB.toFixed(1)} GB`;
+            
+            const div = document.createElement('div');
+            div.className = 'list-item';
+            div.innerHTML = `
+                <div class="list-item-info">
+                    <h4>${item.name} <span style="color: var(--accent); font-size: 0.85rem;">[${formattedSize}]</span></h4>
+                    <p><strong>${item.res} @ ${item.fps}fps</strong> | ${item.codec}</p>
+                    <p>${item.recorders} Recorders × ${item.hours} hrs/day × ${item.days} days (${item.rateMBps.toFixed(1)} MB/s)</p>
+                </div>
+                <div class="list-item-actions">
+                    <button class="btn btn-edit" onclick="editItem(${item.id})">Edit</button>
+                    <button class="btn btn-danger" onclick="triggerDeleteModal(${item.id}, '${item.name}')">✕</button>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+
+        const combinedTB = combinedGB / 1024.0;
+        document.getElementById('t2-combined-data').innerText = `${combinedTB.toFixed(2)} TB (${Math.round(combinedGB)} GB)`;
+        updateHardwareOutputs(combinedGB);
+    }
+
+    function updateHardwareOutputs(totalGB) {
+        // Base-10 metric for hardware capacities (1000 MB = 1 GB)
+        [1, 2, 3].forEach(num => {
+            const selVal = document.getElementById(`t2-hw-${num}`).value;
+            let driveCapacityGB = 0;
+            if (selVal === 'custom') {
+                driveCapacityGB = parseFloat(document.getElementById(`t2-hw-${num}-custom`).value) || 1;
+            } else {
+                driveCapacityGB = parseFloat(selVal);
+            }
+            
+            const drivesNeeded = totalGB > 0 ? Math.ceil(totalGB / driveCapacityGB) : 0;
+            document.getElementById(`t2-hw-${num}-out`).innerText = drivesNeeded;
+        });
+    }
+
+    function editItem(id) {
+        const itemIndex = productionList.findIndex(x => x.id === id);
+        if (itemIndex === -1) return;
+        const item = productionList[itemIndex];
+
+        // Populate Tab 1 with saved parameters
+        document.getElementById('t1-recorders').value = item.recorders;
+        document.getElementById('t1-hours').value = item.hours;
+        document.getElementById('t1-days').value = item.days;
+        document.getElementById('t1-setup-name').value = item.name + " (Edited)";
+        
+        // Remove old item from list so they can re-save cleanly
+        productionList.splice(itemIndex, 1);
+        saveList();
+        switchTab(1);
+    }
+
+    function triggerDeleteModal(id, name) {
+        deleteTargetId = id;
+        document.getElementById('modal-text').innerText = `Are you sure you want to remove "${name}" from your production list?`;
+        document.getElementById('delete-modal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        deleteTargetId = null;
+        document.getElementById('delete-modal').style.display = 'none';
+    }
+
+    document.getElementById('modal-confirm-btn').addEventListener('click', () => {
+        if (deleteTargetId !== null) {
+            productionList = productionList.filter(x => x.id !== deleteTargetId);
+            saveList();
+            renderTab2();
+        }
+        closeModal();
+    });
+
+    // ================= TAB 3: DATA TRANSFER ESTIMATOR =================
+    function populateTab3Sources() {
+        const sourceSel = document.getElementById('t3-source');
+        sourceSel.innerHTML = '';
+        
+        let combinedGB = productionList.reduce((acc, item) => acc + item.totalGB, 0);
+        const combinedTB = (combinedGB / 1024.0).toFixed(2);
+        
+        sourceSel.add(new Option(`🌟 Combined Total Production (${combinedTB} TB)`, combinedGB));
+        
+        productionList.forEach(item => {
+            const formattedSize = item.totalGB >= 1024 ? `${(item.totalGB/1024).toFixed(2)} TB` : `${item.totalGB.toFixed(1)} GB`;
+            sourceSel.add(new Option(`📁 ${item.name} (${formattedSize})`, item.totalGB));
+        });
+
+        runTab3Calculations();
+    }
+
+    function runTab3Calculations() {
+        const sourceGB = parseFloat(document.getElementById('t3-source').value) || 0;
+        const protocolVal = document.getElementById('t3-protocol').value; // e.g., "40000_0.75"
+        
+        if (sourceGB <= 0) {
+            document.getElementById('t3-out-time').innerText = "00:00:00";
+            return;
+        }
+
+        const parts = protocolVal.split('_');
+        const rawSpeedMbps = parseFloat(parts[0]);
+        const realWorldEfficiency = parseFloat(parts[1]);
+        
+        // Effective interface throughput in Mbps
+        const effectiveMbps = rawSpeedMbps * realWorldEfficiency;
+
+        // Convert Source GB to Bits (1 GB = 1024 MB = 8192 Megabits)
+        const rawMegabits = sourceGB * 1024 * 8;
+        
+        // Add 10% TCP/IP & Filesystem packet overhead
+        const totalMegabitsWithOverhead = rawMegabits * 1.10;
+
+        const totalSecondsRequired = totalMegabitsWithOverhead / effectiveMbps;
+        document.getElementById('t3-out-time').innerText = formatExtendedTime(totalSecondsRequired);
+    }
+
+    // ================= TIME FORMATTERS =================
     function formatTime(s) {
         if (!isFinite(s) || s <= 0) return "00:00:00";
         const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = Math.floor(s%60);
@@ -298,17 +741,12 @@
     function formatExtendedTime(s) {
         if (!isFinite(s) || s <= 0) return "00:00:00";
         const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = Math.floor(s%60);
-        if (h >= 24) return `${Math.floor(h/24)}d, ${h%24}h, ${m}m`;
+        if (h >= 24) {
+            const days = Math.floor(h / 24);
+            const remH = h % 24;
+            return `${days}d, ${remH}h, ${m}m, ${sec}s`;
+        }
         return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`;
-    }
-
-    window.onload = init;
-
-    // PWA Service Worker Registration
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW failed', err));
-        });
     }
 </script>
 </body>
