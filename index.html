@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Storage Planner</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#000000">
+    <link rel="apple-touch-icon" href="icon-512.png">
+    <style>
+        :root {
+            --bg: #000000;
+            --card: #1c1c1e;
+            --border: #38383a;
+            --text: #ffffff;
+            --text-muted: #8e8e93;
+            --accent: #0a84ff;
+            --danger: #ff453a;
+            --warning: #ffd60a;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        body { background-color: var(--bg); color: var(--text); padding: 15px; padding-bottom: 40px; line-height: 1.5; }
+        .container { max-width: 600px; margin: 0 auto; }
+        
+        h1 { font-size: 1.8rem; margin-bottom: 20px; font-weight: 700; text-align: center; }
+        .section-title { font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase; margin: 20px 0 8px 15px; font-weight: 600; letter-spacing: 0.5px; }
+        
+        .card { background-color: var(--card); border-radius: 12px; overflow: hidden; margin-bottom: 20px; }
+        .row { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; border-bottom: 1px solid var(--border); }
+        .row:last-child { border-bottom: none; }
+        .row-col { flex-direction: column; align-items: flex-start; gap: 8px; }
+        
+        label { font-size: 1rem; color: var(--text); }
+        select, input { background-color: transparent; color: var(--accent); border: none; font-size: 1rem; text-align: right; outline: none; -webkit-appearance: none; }
+        select { cursor: pointer; font-weight: 500; }
+        input[type="number"] { width: 80px; background-color: rgba(255,255,255,0.05); padding: 5px; border-radius: 6px; }
+        
+        .highlight { color: var(--accent); font-weight: bold; font-size: 1.1rem; }
+        .warning-box { background-color: rgba(255, 214, 10, 0.1); color: var(--warning); padding: 12px 15px; font-size: 0.9rem; text-align: center; border-bottom: 1px solid var(--border); display: none; }
+        
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 15px; }
+        .drive-box { background-color: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; text-align: center; border: 1px solid var(--border); }
+        .drive-box span { display: block; font-size: 1.2rem; font-weight: bold; color: var(--text); margin-top: 5px; }
+        .drive-title { font-size: 0.8rem; color: var(--text-muted); }
+
+        .tabs { display: flex; border-bottom: 1px solid var(--border); background-color: var(--card); }
+        .tab { flex: 1; text-align: center; padding: 12px; color: var(--text-muted); font-size: 0.9rem; cursor: pointer; }
+        .tab.active { color: var(--accent); border-bottom: 2px solid var(--accent); font-weight: 600; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Storage Planner</h1>
+
+    <div class="section-title">1. Hardware & Signal</div>
+    <div class="card">
+        <div class="row">
+            <label>HyperDeck Model</label>
+            <select id="model"><option value="1">HD Studio</option><option value="2">4K Pro</option><option value="3">8K Extreme</option></select>
+        </div>
+        <div class="row">
+            <label>Resolution</label>
+            <select id="resolution"></select>
+        </div>
+        <div class="row">
+            <label>Frame Rate (fps)</label>
+            <select id="fps">
+                <option value="24">24</option><option value="25">25</option><option value="30" selected>30</option><option value="50">50</option><option value="60">60</option>
+            </select>
+        </div>
+        <div class="row">
+            <label>Codec Family</label>
+            <select id="family"></select>
+        </div>
+        <div class="row">
+            <label>Codec Flavor</label>
+            <select id="flavor"></select>
+        </div>
+        <div id="bandwidth-warning" class="warning-box">⚠ Warning: Data rate exceeds 300 MB/s. Ensure certified high-speed NVMe media is used.</div>
+        <div class="row" style="background-color: rgba(10, 132, 255, 0.1);">
+            <label>Target Data Rate</label>
+            <span id="data-rate-display" class="highlight">-- MB/s</span>
+        </div>
+    </div>
+
+    <div class="section-title">2. Capacity Calculator</div>
+    <div class="card">
+        <div class="tabs">
+            <div class="tab active" id="tab-space" onclick="setMode('space')">Space to Time</div>
+            <div class="tab" id="tab-time" onclick="setMode('time')">Time to Space</div>
+        </div>
+        <div id="mode-space" class="row">
+            <label>Available Space</label>
+            <div style="display:flex; gap:10px; align-items:center;">
+                <input type="number" id="input-space" value="1" min="0" step="any">
+                <select id="unit-space"><option value="1">MB</option><option value="1024">GB</option><option value="1048576" selected>TB</option></select>
+            </div>
+        </div>
+        <div id="mode-space-result" class="row">
+            <label>Max Duration</label>
+            <span id="output-duration" class="highlight" style="font-family: monospace;">00:00:00</span>
+        </div>
+
+        <div id="mode-time" class="row" style="display:none;">
+            <label>Duration (H:M:S)</label>
+            <div style="display:flex; gap:5px; align-items:center;">
+                <input type="number" id="input-hh" value="1" min="0" style="width:50px;">:
+                <input type="number" id="input-mm" value="0" min="0" max="59" style="width:50px;">:
+                <input type="number" id="input-ss" value="0" min="0" max="59" style="width:50px;">
+            </div>
+        </div>
+        <div id="mode-time-result" class="row" style="display:none;">
+            <label>Required Space</label>
+            <div style="display:flex; gap:10px; align-items:center;">
+                <span id="output-space" class="highlight">0.00</span>
+                <select id="unit-output"><option value="1">MB</option><option value="1024" selected>GB</option><option value="1048576">TB</option></select>
+            </div>
+        </div>
+    </div>
+
+    <div class="section-title">3. Production Planner</div>
+    <div class="card">
+        <div class="row">
+            <label>Simultaneous Recorders</label>
+            <input type="number" id="proj-recorders" value="1" min="1">
+        </div>
+        <div class="row">
+            <label>Hours Per Day</label>
+            <input type="number" id="proj-hours" value="8" min="0.1" step="any">
+        </div>
+        <div class="row">
+            <label>Total Days</label>
+            <input type="number" id="proj-days" value="1" min="1">
+        </div>
+        <div class="row" style="background-color: rgba(10, 132, 255, 0.1);">
+            <label>Total Project Data</label>
+            <div style="display:flex; gap:10px; align-items:center;">
+                <span id="proj-total-data" class="highlight">0.00</span>
+                <select id="unit-proj"><option value="1">MB</option><option value="1024">GB</option><option value="1048576" selected>TB</option></select>
+            </div>
+        </div>
+    </div>
+
+    <div class="section-title">4. Data Offload Estimator</div>
+    <div class="card">
+        <div class="row">
+            <label>Transfer Speed</label>
+            <select id="transfer-speed">
+                <option value="100">100 Mbps (Fast Ethernet)</option>
+                <option value="300">300 Mbps (Standard WiFi)</option>
+                <option value="500">500 Mbps (Fast WiFi)</option>
+                <option value="1000" selected>1 Gbps (Standard Network)</option>
+                <option value="2500">2.5 Gbps (Upgraded Network)</option>
+                <option value="5000">5 Gbps (USB 3.0)</option>
+                <option value="10000">10 Gbps (10G/Thunderbolt)</option>
+            </select>
+        </div>
+        <div class="row">
+            <label>Estimated Time</label>
+            <span id="transfer-time" class="highlight" style="font-family: monospace;">00:00:00</span>
+        </div>
+    </div>
+
+    <div class="section-title">5. Hardware Requirements</div>
+    <div class="card">
+        <div class="grid-4">
+            <div class="drive-box"><div class="drive-title">500 GB</div><span id="d500">0</span></div>
+            <div class="drive-box"><div class="drive-title">1 TB</div><span id="d1000">0</span></div>
+            <div class="drive-box"><div class="drive-title">2 TB</div><span id="d2000">0</span></div>
+            <div class="drive-box"><div class="drive-title">4 TB</div><span id="d4000">0</span></div>
+        </div>
+        <div class="row">
+            <label>Custom Drive Size</label>
+            <div style="display:flex; gap:10px; align-items:center;">
+                <input type="number" id="custom-size" value="8" min="1" step="any">
+                <select id="custom-unit"><option value="1">MB</option><option value="1000">GB</option><option value="1000000" selected>TB</option></select>
+            </div>
+        </div>
+        <div class="row">
+            <label>Requires</label>
+            <span id="dcustom" class="highlight">0 Drives</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    const resolutions = [
+        { id: "1080", name: "1080p HD", multiplier: 1, level: 1 },
+        { id: "4k", name: "4K UHD", multiplier: 4, level: 2 },
+        { id: "8k", name: "8K UHD", multiplier: 16, level: 3 }
+    ];
+
+    const codecs = {
+        prores: { name: "Apple ProRes", flavors: [ { name: "Proxy", rate: 5.6 }, { name: "LT", rate: 12.75 }, { name: "422", rate: 18.4 }, { name: "HQ", rate: 27.5 }, { name: "4444", rate: 41.25 } ] },
+        dnx: { name: "Avid DNxHD/HR", flavors: [ { name: "LB", rate: 4.5 }, { name: "SQ", rate: 18.1 }, { name: "HQ/HQX", rate: 27.5 }, { name: "444", rate: 41.25 } ] },
+        h264: { name: "H.264", flavors: [ { name: "Low", rate: 1.25 }, { name: "Medium", rate: 2.5 }, { name: "High/SDI", rate: 3.75 } ] },
+        h265: { name: "H.265 (HEVC)", flavors: [ { name: "Low", rate: 1.5 }, { name: "Medium", rate: 3.0 }, { name: "High/SDI", rate: 5.0 } ] }
+    };
+
+    let currentRateMBps = 0;
+    let projTotalMB = 0;
+
+    function init() {
+        const fam = document.getElementById('family');
+        for (const key in codecs) { fam.add(new Option(codecs[key].name, key)); }
+        
+        document.querySelectorAll('select, input').forEach(el => el.addEventListener('input', runCalc));
+        document.getElementById('model').addEventListener('change', updateConstraints);
+        document.getElementById('family').addEventListener('change', updateFlavors);
+        
+        updateConstraints();
+        updateFlavors();
+    }
+
+    function updateConstraints() {
+        const maxLevel = parseInt(document.getElementById('model').value);
+        const res = document.getElementById('resolution');
+        const currentVal = res.value;
+        res.innerHTML = '';
+        resolutions.filter(r => r.level <= maxLevel).forEach(r => res.add(new Option(r.name, r.multiplier)));
+        if(Array.from(res.options).some(o => o.value === currentVal)) res.value = currentVal;
+        runCalc();
+    }
+
+    function updateFlavors() {
+        const flv = document.getElementById('flavor');
+        flv.innerHTML = '';
+        codecs[document.getElementById('family').value].flavors.forEach(f => flv.add(new Option(f.name, f.rate)));
+        // Default to HQ equivalent
+        if(flv.options.length >= 4) flv.selectedIndex = 3; 
+        runCalc();
+    }
+
+    function setMode(mode) {
+        document.getElementById('mode-space').style.display = mode === 'space' ? 'flex' : 'none';
+        document.getElementById('mode-space-result').style.display = mode === 'space' ? 'flex' : 'none';
+        document.getElementById('mode-time').style.display = mode === 'time' ? 'flex' : 'none';
+        document.getElementById('mode-time-result').style.display = mode === 'time' ? 'flex' : 'none';
+        
+        document.getElementById('tab-space').className = mode === 'space' ? 'tab active' : 'tab';
+        document.getElementById('tab-time').className = mode === 'time' ? 'tab active' : 'tab';
+        runCalc();
+    }
+
+    function runCalc() {
+        // Data Rate
+        const base = parseFloat(document.getElementById('flavor').value) || 0;
+        const resMult = parseFloat(document.getElementById('resolution').value) || 1;
+        const fps = parseFloat(document.getElementById('fps').value) || 30;
+        currentRateMBps = base * resMult * (fps / 30.0);
+        
+        document.getElementById('data-rate-display').innerText = currentRateMBps.toFixed(2) + " MB/s";
+        document.getElementById('bandwidth-warning').style.display = currentRateMBps > 300 ? 'block' : 'none';
+
+        // Calculator
+        if (document.getElementById('mode-space').style.display !== 'none') {
+            const space = parseFloat(document.getElementById('input-space').value) || 0;
+            const mult = parseFloat(document.getElementById('unit-space').value);
+            document.getElementById('output-duration').innerText = formatTime((space * mult) / currentRateMBps);
+        } else {
+            const secs = (parseFloat(document.getElementById('input-hh').value||0)*3600) + (parseFloat(document.getElementById('input-mm').value||0)*60) + parseFloat(document.getElementById('input-ss').value||0);
+            const div = parseFloat(document.getElementById('unit-output').value);
+            document.getElementById('output-space').innerText = ((secs * currentRateMBps) / div).toFixed(2);
+        }
+
+        // Project
+        const recs = parseFloat(document.getElementById('proj-recorders').value) || 1;
+        const hrs = parseFloat(document.getElementById('proj-hours').value) || 8;
+        const days = parseFloat(document.getElementById('proj-days').value) || 1;
+        projTotalMB = recs * hrs * 3600 * days * currentRateMBps;
+        
+        document.getElementById('proj-total-data').innerText = (projTotalMB / parseFloat(document.getElementById('unit-proj').value)).toFixed(2);
+
+        // Drives (Using Hardware Base-10 1000MB = 1GB)
+        document.getElementById('d500').innerText = Math.ceil(projTotalMB / 500000);
+        document.getElementById('d1000').innerText = Math.ceil(projTotalMB / 1000000);
+        document.getElementById('d2000').innerText = Math.ceil(projTotalMB / 2000000);
+        document.getElementById('d4000').innerText = Math.ceil(projTotalMB / 4000000);
+        
+        const cSize = parseFloat(document.getElementById('custom-size').value) || 1;
+        const cUnit = parseFloat(document.getElementById('custom-unit').value);
+        document.getElementById('dcustom').innerText = Math.ceil(projTotalMB / (cSize * cUnit)) + " Drives";
+
+        // Transfer Estimator (Bits, overhead included)
+        const speedMbps = parseFloat(document.getElementById('transfer-speed').value);
+        const totalBitsOverhead = projTotalMB * 8 * 1.10;
+        document.getElementById('transfer-time').innerText = formatExtendedTime(totalBitsOverhead / speedMbps);
+    }
+
+    function formatTime(s) {
+        if (!isFinite(s) || s <= 0) return "00:00:00";
+        const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = Math.floor(s%60);
+        return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`;
+    }
+
+    function formatExtendedTime(s) {
+        if (!isFinite(s) || s <= 0) return "00:00:00";
+        const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = Math.floor(s%60);
+        if (h >= 24) return `${Math.floor(h/24)}d, ${h%24}h, ${m}m`;
+        return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`;
+    }
+
+    window.onload = init;
+
+    // PWA Service Worker Registration
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW failed', err));
+        });
+    }
+</script>
+</body>
+</html>
