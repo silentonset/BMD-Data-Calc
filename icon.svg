@@ -1,0 +1,43 @@
+<?xml version="1.0" standalone="no"?>
+<svg id="app-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+            <defs>
+                <!-- Heavy Carbon Slate Background -->
+                <linearGradient id="carbonGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#141821"/>
+                    <stop offset="100%" stop-color="#080a0f"/>
+                </linearGradient>
+                <!-- Machined Bezel Rim -->
+                <linearGradient id="bezelGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#2e384d"/>
+                    <stop offset="100%" stop-color="#0f131a"/>
+                </linearGradient>
+            </defs>
+
+            <!-- 1. Full Bleed Solid Canvas -->
+            <rect width="512" height="512" fill="#05070a"/>
+            
+            <!-- 2. Angular Chamfered Armor Plate (Octagonal Footprint) -->
+            <path d="M 110 40 L 402 40 L 472 110 L 472 402 L 402 472 L 110 472 L 40 402 L 40 110 Z" fill="url(#carbonGrad)" stroke="url(#bezelGrad)" stroke-width="4" stroke-linejoin="miter" stroke-miterlimit="2"/>
+
+            <!-- 3. Tactical Viewfinder Registration Brackets -->
+            <g id="viewfinder-brackets" stroke="#524826" stroke-width="4" fill="none" stroke-linecap="square">
+                <path d="M 80 110 V 80 H 110"/>
+                <path d="M 402 80 H 432 V 110"/>
+                <path d="M 80 402 V 432 H 110"/>
+                <path d="M 402 432 H 432 V 402"/>
+            </g>
+
+            <!-- 4. Angular "DC" Impact Typography (Locked in Safe Zone) -->
+            <!-- LETTER D (Left Side Monogram) -->
+            <g id="letter-d">
+                <path d="M 110 160 H 175 L 215 200 V 312 L 175 352 H 110 Z" fill="none" stroke="#ffffff" stroke-width="44" stroke-linejoin="miter" stroke-miterlimit="2"/>
+            </g>
+
+            <!-- LETTER C (Right Side Monogram) -->
+            <g id="letter-c">
+                <path d="M 402 195 L 367 160 H 317 L 277 200 V 312 L 317 352 H 367 L 402 317" fill="none" stroke="#ffcc00" stroke-width="44" stroke-linejoin="miter" stroke-miterlimit="2" stroke-linecap="square"/>
+            </g>
+
+            <!-- 5. Integrated Playback Deck Chevron (Inside letter D) -->
+            <path id="playback-chevron" d="M 145 236 L 170 256 L 145 276 Z" fill="#ffcc00"/>
+        </svg>
